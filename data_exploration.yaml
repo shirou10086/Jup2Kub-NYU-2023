@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exploration-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-exploration
+  template:
+    metadata:
+      labels:
+        app: data-exploration
+    spec:
+      containers:
+      - name: data-exploration-container
+        image: data_exploration
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-exploration-service
+spec:
+  selector:
+    app: data-exploration
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80

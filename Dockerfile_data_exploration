@@ -1,0 +1,8 @@
+
+FROM python:3.9
+
+COPY preprocessed_iris.csv data_exploration.py ./
+
+RUN pip install pandas
+
+CMD ["python", "data_exploration.py"]

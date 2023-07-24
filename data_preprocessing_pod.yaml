@@ -1,0 +1,9 @@
+# data_preprocessing_pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: data-preprocessing-pod
+spec:
+  containers:
+    - name: data-preprocessing-container
+      image: data_preprocessing/data_preprocessing_image
