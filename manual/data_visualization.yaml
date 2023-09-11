@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-visualization-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-visualization
+  template:
+    metadata:
+      labels:
+        app: data-visualization
+    spec:
+      containers:
+      - name: data-visualization-container
+        image: data_visualization
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-visualization-service
+spec:
+  selector:
+    app: data-visualization
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80

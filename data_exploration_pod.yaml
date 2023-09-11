@@ -1,9 +1,0 @@
-# data_exploration_pod.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: data-exploration-pod
-spec:
-  containers:
-    - name: data-exploration-container
-      image: data_exploration

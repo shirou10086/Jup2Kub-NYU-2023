@@ -23,17 +23,18 @@ def auto_pack(command, file):
 
 def auto_unpack_and_dockerize(rpz_file):
     container_name = f"container_{rpz_file.replace('/', '_')}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
+    
     try:
-        subprocess.run(["reprounzip", "docker", "setup", rpz_file, container_name], check=True)
+        result = subprocess.run(["reprounzip", "docker", "setup", rpz_file, container_name], check=True, stdout=subprocess.PIPE, text=True)
+        
+        # Extract the docker image name from the command output
+        for line in result.stdout.split("\n"):
+            if "Docker image" in line:
+                docker_image_name = line.split()[-1]  # Get the last word, which should be the image name
+                print(f"Docker Image Name: {docker_image_name}")
+                break
     except subprocess.CalledProcessError:
         print(f"Error during reprounzip docker setup for {rpz_file}. Exiting.")
-        return
-
-    try:
-        subprocess.run(["reprounzip", "docker", "run", container_name], check=True)
-    except subprocess.CalledProcessError:
-        print(f"Error during reprounzip docker run for {container_name}. Exiting.")
         return
 
     print(f"Unpacking and dockerization completed for {rpz_file}. Container name: {container_name}")

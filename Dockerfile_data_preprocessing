@@ -1,8 +1,0 @@
-
-FROM python:3.9
-
-COPY iris.csv data_preprocessing.py ./
-
-RUN pip install pandas
-
-CMD ["python", "data_preprocessing.py"]
