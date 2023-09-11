@@ -12,7 +12,7 @@ pv_body = client.V1PersistentVolume(
         capacity={"storage": "10Gi"},
         access_modes=["ReadWriteOnce"],
         aws_elastic_block_store=client.V1AWSElasticBlockStoreVolumeSource(
-            volume_id="<your-ebs-volume-id>",
+            volume_id="<wJalrXUtnFEMI/K7MDENG/bPxRfiCYsdsffcwaqada>",
             fs_type="ext4"
         )
     )
