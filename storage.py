@@ -33,3 +33,43 @@ pvc_body = client.V1PersistentVolumeClaim(
 )
 
 v1.create_namespaced_persistent_volume_claim(namespace="default", body=pvc_body)
+def create_efs_pv_pvc(name, namespace, efs_dns_name):
+    pv = {
+        "apiVersion": "v1",
+        "kind": "PersistentVolume",
+        "metadata": {
+            "name": name
+        },
+        "spec": {
+            "capacity": {
+                "storage": "5Gi"
+            },
+            "accessModes": ["ReadWriteMany"],
+            "persistentVolumeReclaimPolicy": "Retain",
+            "storageClassName": "efs",
+            "csi": {
+                "driver": "efs.csi.aws.com",
+                "volumeHandle": efs_dns_name
+            }
+        }
+    }
+
+    pvc = {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "metadata": {
+            "name": name,
+            "namespace": namespace
+        },
+        "spec": {
+            "accessModes": ["ReadWriteMany"],
+            "storageClassName": "efs",
+            "resources": {
+                "requests": {
+                    "storage": "5Gi"
+                }
+            }
+        }
+    }
+
+    return pv, pvc
