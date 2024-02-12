@@ -1,8 +1,0 @@
-
-FROM python:3.9
-
-COPY preprocessed_iris.csv data_visualization.py iris_visualization.png ./
-
-RUN pip install pandas matplotlib
-
-CMD ["python", "data_visualization.py"]
