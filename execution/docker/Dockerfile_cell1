@@ -1,0 +1,8 @@
+
+    FROM r-base:4.4.0
+    WORKDIR /app
+    COPY . /app
+    RUN apt-get update && apt-get install -y libcurl4-openssl-dev libssl-dev
+    RUN Rscript install_packages.R
+    CMD ["Rscript", "cell1.R"]
+    
