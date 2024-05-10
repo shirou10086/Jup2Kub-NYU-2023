@@ -1,0 +1,33 @@
+{
+    "results-hub": {
+        "master-node-name": "node0.net-test.rdma-prefetch-pg0.wisc.cloudlab.us",
+        "local-pv-path": "/results-hub-log",
+        "pv-name": "local-pv",
+        "pvc-name": "local-pvc-for-rh",
+        "pv-storage-size": "500Mi",
+        "pvc-storage-size": "500Mi",
+        "namespace": "default"
+    },
+
+    "execution": {
+        "output-directory": "./execution",
+        "dockerhub-username": "shirou10086",
+        "dockerhub-repo-name": "jup2kub",
+        "image-list-filename": "image_list.txt",
+        "n-docker-worker": "4"
+    },
+
+    "jobs": {
+        "jobs-pv-storage-size": "500Mi",
+        "job-pvc-storage-size": "100Mi",
+        "data-dir-path": "/Users/coulson/Jup2Kub/example/data",
+        "namespace": "default"
+    },
+
+    "filesReadWrite": [
+        "W:./data/docOne.txt W:./data/docTwo.txt",
+        "R:./data/docOne.txt",
+        "R:./data/docTwo.txt",
+        "W:./data/docOne.txt W:./data/docTwo.txt"
+    ]
+}
