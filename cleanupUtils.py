@@ -1,41 +1,61 @@
-# Function to delete a Kubernetes job
-delete_job <- function(job_name, namespace) {
-  command <- sprintf('kubectl delete job %s --namespace %s', job_name, namespace)
-  output <- system(command, intern = TRUE)
-  cat("Output:\n", output, "\n")
-}
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 
-# Function to delete a persistent volume
-delete_local_pv <- function(pv_name) {
-  command <- sprintf('kubectl delete pv %s', pv_name)
-  output <- system(command, intern = TRUE)
-  cat("Output:\n", output, "\n")
-}
+'''
+This file contains the functions for cleanup files & k8s cluster deployments
+'''
 
-# Function to delete a persistent volume claim
-delete_pvc <- function(pvc_name, namespace) {
-  command <- sprintf('kubectl delete pvc %s --namespace %s', pvc_name, namespace)
-  output <- system(command, intern = TRUE)
-  cat("Output:\n", output, "\n")
-}
+def delete_job(job_name, namespace):
+    config.load_kube_config()
+    batch_v1 = client.BatchV1Api()
+    try:
+        response = batch_v1.delete_namespaced_job(
+            name=job_name,
+            namespace=namespace,
+            body=client.V1DeleteOptions(
+                propagation_policy='Foreground',
+            ),
+        )
+        print(f"Job '{job_name}' in namespace '{namespace}' deleted. Status: {response.status}")
+    except ApiException as e:
+        if e.status == 404:
+            print(f"Job '{job_name}' in namespace '{namespace}' not found.")
+        else:
+            print(f"Error deleting job '{job_name}' in namespace '{namespace}': {e}")
 
-# Function to delete a stateful set
-delete_statefulset <- function(statefulset_name, namespace) {
-  command <- sprintf('kubectl delete statefulsets %s --namespace %s', statefulset_name, namespace)
-  output <- system(command, intern = TRUE)
-  cat("Output:\n", output, "\n")
-}
+def delete_local_pv(pv_name):
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    try:
+        api_instance.delete_persistent_volume(name=pv_name)
+        print(f"PersistentVolume '{pv_name}' deleted.")
+    except ApiException as e:
+        print(f"Exception when deleting PersistentVolume: {e}")
 
-# Function to delete a Kubernetes service
-delete_service <- function(service_name, namespace) {
-  command <- sprintf('kubectl delete service %s --namespace %s', service_name, namespace)
-  output <- system(command, intern = TRUE)
-  cat("Output:\n", output, "\n")
-}
+def delete_pvc(pvc_name, namespace):
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    try:
+        api_instance.delete_namespaced_persistent_volume_claim(name=pvc_name, namespace=namespace)
+        print(f"PersistentVolumeClaim '{pvc_name}' deleted from namespace '{namespace}'.")
+    except ApiException as e:
+        print(f"Exception when deleting PersistentVolumeClaim: {e}")
 
-# Example usage:
-# delete_job("example-job", "default")
-# delete_local_pv("example-pv")
-# delete_pvc("example-pvc", "default")
-# delete_statefulset("example-set", "default")
-# delete_service("example-service", "default")
+def delete_statefulset(statefulset_name, namespace):
+    config.load_kube_config()
+    api_instance = client.AppsV1Api()
+    try:
+        api_instance.delete_namespaced_stateful_set(name=statefulset_name, namespace=namespace)
+        print(f"StatefulSet '{statefulset_name}' deleted from namespace '{namespace}'.")
+    except ApiException as e:
+        print(f"Exception when deleting StatefulSet: {e}")
+
+def delete_service(service_name, namespace):
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    try:
+        api_instance.delete_namespaced_service(name=service_name, namespace=namespace)
+        print(f"Service '{service_name}' deleted from namespace '{namespace}'.")
+    except ApiException as e:
+        print(f"Exception when deleting Service: {e}")
+

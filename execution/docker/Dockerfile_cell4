@@ -1,8 +1,11 @@
 
-    FROM r-base:4.4.0
+    FROM python:3.12
     WORKDIR /app
-    COPY . /app
-    RUN apt-get update && apt-get install -y libcurl4-openssl-dev libssl-dev
-    RUN Rscript install_packages.R
-    CMD ["Rscript", "cell4.R"]
+    COPY cell4.py /app
+    COPY ResultsHub.py /app
+    COPY J2kResultsHub_pb2.py /app
+    COPY J2kResultsHub_pb2_grpc.py /app
+    COPY requirements.txt /app
+    RUN apt-get update && pip install --ignore-installed -r requirements.txt
+    CMD ["python", "/app/cell4.py"]
     

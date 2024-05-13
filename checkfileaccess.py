@@ -1,39 +1,66 @@
-library(magrittr)
-library(stringr)
+import ast
+import os
+from typing import Set
 
-# Function to collect called functions from an R file
-collect_called_functions_from_file <- function(filename) {
-  code <- readLines(filename)
-  # Use regex to extract function calls
-  calls <- str_extract_all(code, "\\b[a-zA-Z0-9_.]+(?=\\()") %>% unlist()
-  # Filter out NA and make the function calls unique
-  unique(na.omit(calls))
-}
+def collect_called_functions_from_file(filename: str) -> Set[str]:
+    """
+    Parses a Python file and collects names of all functions called within it.
+    """
+    class FunctionCallCollector(ast.NodeVisitor):
+        def __init__(self):
+            super().__init__()
+            self.called_functions = set()
 
-# Check if any of the called functions are related to file access operations
-checks_file_access <- function(called_functions) {
-  file_operations <- c('read.csv', 'write.csv', 'readLines', 'writeLines', 'file', 'file.create',
-                       'file.remove', 'file.rename', 'file.copy', 'dir.create', 'unlink',
-                       'readRDS', 'saveRDS', 'load', 'save', 'download.file', 'read.xlsx', 'write.xlsx')
-  any(called_functions %in% file_operations)
-}
+        def visit_Call(self, node: ast.Call):
+            if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+                self.called_functions.add(f"{node.func.value.id}.{node.func.attr}")
+            elif isinstance(node.func, ast.Attribute):
+                self.called_functions.add(node.func.attr)
+            elif isinstance(node.func, ast.Name):
+                self.called_functions.add(node.func.id)
+            self.generic_visit(node)
 
-# Generate a report about file access
-generate_file_access_report <- function(directory_path = "./execution", report_file_path = "./execution/fileaccess.txt", file_prefix = "cell", file_extension = ".R", file_count = 10) {
-  accessed_files <- character()
+    with open(filename, 'r', encoding='utf-8') as file:
+        source_code = file.read()
 
-  for (i in 1:file_count) {
-    file_path <- file.path(directory_path, paste0(file_prefix, i, file_extension))
-    if (file.exists(file_path)) {
-      called_functions <- collect_called_functions_from_file(file_path)
-      if (checks_file_access(called_functions)) {
-        accessed_files <- c(accessed_files, basename(file_path))
-      }
+    parsed_ast = ast.parse(source_code)
+    collector = FunctionCallCollector()
+    collector.visit(parsed_ast)
+    return collector.called_functions
+
+def checks_file_access(called_functions: Set[str]) -> bool:
+    """
+    Checks if any of the called functions are related to file access operations.
+    """
+    file_operations = {
+        'open', 'read', 'write', 'readline', 'readlines',
+        'os.remove', 'os.unlink', 'os.rename', 'os.renames', 'os.mkdir', 'os.makedirs', 'os.rmdir', 'os.removedirs',
+        'shutil.copy', 'shutil.copy2', 'shutil.copyfile', 'shutil.copytree', 'shutil.move', 'shutil.rmtree',
+        'pandas.read_csv', 'pandas.to_csv', 'pandas.read_excel', 'pandas.to_excel',
+        'numpy.load', 'numpy.save', 'numpy.savetxt', 'json.load', 'json.dump',
+        'csv.reader', 'csv.writer', 'pickle.load', 'pickle.dump', 'yaml.load', 'yaml.dump',
+        'xml.etree.ElementTree.parse', 'xml.etree.ElementTree.ElementTree.write',
     }
-  }
 
-  writeLines(sapply(accessed_files, tools::file_path_sans_ext), report_file_path)
-}
+    return any(func in called_functions for func in file_operations)
 
-# Example usage
-# generate_file_access_report()
+
+def generate_file_access_report(directory_path="./execution", report_file_path="./execution/fileaccess.txt", file_prefix="cell", file_extension=".py", file_count=10):
+    """
+    Generates a report of Python files within a specified directory that access files,
+    and writes the names of these files to a text file, each on a new line.
+    """
+    accessed_files = []
+
+    for i in range(1, file_count + 1):
+        file_path = os.path.join(directory_path, f"{file_prefix}{i}{file_extension}")
+        if os.path.exists(file_path):
+            called_functions = collect_called_functions_from_file(file_path)
+            if checks_file_access(called_functions):
+                accessed_files.append(os.path.basename(file_path))
+
+    with open(report_file_path, 'w', encoding='utf-8') as report_file:
+        for filename in accessed_files:
+            # Use os.path.splitext to get the file name without extension
+            base_name = os.path.splitext(filename)[0]
+            report_file.write(f"{base_name}\n")

@@ -15,7 +15,7 @@ def get_r_version(default_version='4.4.0'):
         print(f"Error retrieving R version, using default version {default_version}. Error: {e}")
         return default_version
 
-def create_dockerfile(file_name, requirements_path, dockerfiles_path, r_version):
+def create_dockerfile_r(file_name, requirements_path, dockerfiles_path, r_version):
     dockerfile_content = f'''
     FROM r-base:{r_version}
     WORKDIR /app
@@ -31,7 +31,7 @@ def create_dockerfile(file_name, requirements_path, dockerfiles_path, r_version)
     return dockerfile_path
 
 
-def build_docker_image(dockerfile_path, image_tag, context_path):
+def build_docker_image_r(dockerfile_path, image_tag, context_path):
     print('Creating docker image...')
     try:
         subprocess.run(["docker", "build", "-f", dockerfile_path, "-t", image_tag, context_path], check=True)
@@ -48,5 +48,5 @@ os.makedirs(dockerfiles_path, exist_ok=True)
 
 for file in os.listdir(output_dir):
     if file.endswith('.R') and file.startswith('cell'):
-        dockerfile_path = create_dockerfile(file, 'install_packages.R', dockerfiles_path, r_version)
-        build_docker_image(dockerfile_path, f"{file.split('.')[0]}", output_dir)
+        dockerfile_path = create_dockerfile_r(file, 'install_packages.R', dockerfiles_path, r_version)
+        build_docker_image_r(dockerfile_path, f"{file.split('.')[0]}", output_dir)
