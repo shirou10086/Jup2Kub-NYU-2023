@@ -8,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 #R packages
-
+from R2docker import build_docker_image_r ,create_dockerfile_r
 # J2K packages
 from codegen import gen_code_to_all_cells
 import py2docker
@@ -46,8 +46,15 @@ def dockerize_and_push(filename, dockerfiles_path, python_version, output_dir, d
     build_docker_image(dockerfile_path, image_name_tag, output_dir)
     push_to_docker_hub(image_name_tag)
     return (f"{dockerhub_username}/{dockerhub_repository}", filename.split('.')[0], file_accessed)
-
-
+#Run R script without using reticulate
+def run_r_script(script_path):
+    try:
+        result = subprocess.run(['Rscript', script_path], check=True, capture_output=True, text=True)
+        print("R script output:")
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running R script: {e}")
+        print(f"Error output: {e.stderr}")
 
 
 def main(skip_dockerization, notebook_path, output_dir, dockerhub_username, dockerhub_repository, image_list_path, n_docker_worker):

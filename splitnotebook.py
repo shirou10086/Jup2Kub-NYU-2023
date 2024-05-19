@@ -32,18 +32,34 @@ def extract_imports_from_code_r(code):
             imports.add(line.split('require(')[1].split(')')[0].strip().replace("'", "").replace('"', ''))
     return imports
 
-def save_requirements(dependencies, output_directory, filename='requirements.txt'):
-    dependencies = {pkg for pkg in dependencies if not is_standard_library(pkg)}
-    path = os.path.join(output_directory, filename)
-    with open(path, 'w', encoding='utf-8') as file:
-        file.write('\n'.join(sorted(dependencies)))
-    print(f"Saved dependencies to {path}")
+
+def save_requirements(dependencies, output_directory):
+    # Ensure these libraries are always included
+    additional_packages = {'grpcio', 'grpcio-tools', 'protobuf'}
+    dependencies.update(additional_packages)
+
+    requirements_content = '\n'.join(dependencies)
+    requirements_path = os.path.join(output_directory, 'requirements.txt')
+    with open(requirements_path, 'w', encoding='utf-8') as file:
+        file.write(requirements_content)
+    print(f"Requirements saved to {requirements_path}")
 
 def save_r_packages(packages, output_directory, filename='install_packages.R'):
+    requiredpackages = []
+
+    # this is a list of required packages for reticulate
+    for pkg in requiredpackages:
+        packages.add(pkg)
+
     path = os.path.join(output_directory, filename)
     with open(path, 'w', encoding='utf-8') as file:
         for pkg in packages:
-            file.write(f'install.packages("{pkg}")\n')
+            file.write(f'install.packages("{pkg}", repos="http://cran.rstudio.com/")\n')
+        file.write('''
+# set python path
+library(reticulate)
+use_virtualenv("/root/.virtualenvs/r-reticulate", required = TRUE)
+''')
     print(f"Saved R packages installation script to {path}")
 def copy_resultshub_files(source_directory, target_directory):
     os.makedirs(target_directory, exist_ok=True)
