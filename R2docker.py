@@ -13,7 +13,7 @@ def get_version_r(default_version='4.4.0'):
     try:
         result = subprocess.run(['Rscript', '--version'], capture_output=True, text=True)
         version_line = result.stdout.split('\n')[0]
-        # 使用正则表达式提取版本号
+        # get version using re
         match = re.search(r"\b\d+\.\d+\.\d+\b", version_line)
         if match:
             print("Matching"+match.group(0)+"!")
