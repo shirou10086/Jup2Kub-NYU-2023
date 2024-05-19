@@ -103,6 +103,6 @@ def process_notebook(notebook_path, output_directory):
 
 
 # Example usage
-notebook_path = './example/Rexample.ipynb'
+notebook_path = './example/Rvariables.ipynb'
 output_directory = 'execution'
 process_notebook(notebook_path, output_directory)

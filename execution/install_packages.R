@@ -1,4 +1,3 @@
-install.packages("ggplot2", repos="http://cran.rstudio.com/")
 
 # set python path
 library(reticulate)

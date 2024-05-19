@@ -4,20 +4,32 @@ library(jsonlite)
 track_variables <- function(code) {
     assign_pattern <- "\\b(\\w+)\\s*<-"
     use_pattern <- "\\b(\\w+)\\b"
+    for_pattern <- "for\\s*\\((\\w+)\\s+in"
+    while_pattern <- "while\\s*\\((\\w+)\\s*"
+    repeat_pattern <- "repeat\\s*\\{"
 
     assigns <- gregexpr(assign_pattern, code, perl = TRUE)
     uses <- gregexpr(use_pattern, code, perl = TRUE)
+    fors <- gregexpr(for_pattern, code, perl = TRUE)
+    whiles <- gregexpr(while_pattern, code, perl = TRUE)
+    repeats <- gregexpr(repeat_pattern, code, perl = TRUE)
 
     assigned_vars <- unique(regmatches(code, assigns)[[1]])
     used_vars <- unique(regmatches(code, uses)[[1]])
+    for_vars <- unique(regmatches(code, fors)[[1]])
+    while_vars <- unique(regmatches(code, whiles)[[1]])
+    repeat_vars <- unique(regmatches(code, repeats)[[1]])
 
     assigned_vars <- gsub("\\s*<-\\s*", "", assigned_vars)
+    for_vars <- gsub("for\\s*\\(|\\s+in.*", "", for_vars)
+    while_vars <- gsub("while\\s*\\(|\\s*\\).*", "", while_vars)
+    repeat_vars <- character()  # repeat does not declare variables like for and while
 
     # Filter out R keywords
-    keywords <- c("if", "else", "for", "while", "function", "library", "require", "return")
-    used_vars <- setdiff(used_vars, keywords)
+    keywords <- c("if", "else", "for", "while", "repeat", "function", "library", "require", "return")
+    used_vars <- setdiff(used_vars, c(keywords, for_vars, while_vars, repeat_vars))
 
-    list(global_vars = assigned_vars, used_vars = used_vars)
+    list(global_vars = assigned_vars, used_vars = used_vars, loop_vars = c(for_vars, while_vars))
 }
 
 # Function to insert code into R script
@@ -36,10 +48,21 @@ insert_code_to_cell <- function(filepath, previous_vars) {
 
     fetch_and_wait_statements <- c()
     if (cell_number > 1) {
+        # Find the line number where each variable is assigned
+        assignment_lines <- sapply(vars$global_vars, function(var) {
+            grep(paste0("\\b", var, "\\s*<-"), lines)
+        }, simplify = FALSE)
+
         for (var in vars$used_vars) {
-            if (var %in% previous_vars) {
-                fetch_code <- sprintf("%s <- fetchVarResult('%s', varAncestorCell=%d, 'localhost')", var, var, cell_number - 1)
-                fetch_and_wait_statements <- c(fetch_and_wait_statements, fetch_code)
+            if (var %in% previous_vars && !(var %in% vars$loop_vars)) {
+                assignment_line <- assignment_lines[[var]]
+                first_use_line <- grep(paste0("\\b", var, "\\b"), lines)[1]
+
+                # Fetch the variable only if it is used before being assigned
+                if (length(assignment_line) == 0 || first_use_line < assignment_line[1]) {
+                    fetch_code <- sprintf("%s <- fetchVarResult('%s', varAncestorCell=%d, 'localhost')", var, var, cell_number - 1)
+                    fetch_and_wait_statements <- c(fetch_and_wait_statements, fetch_code)
+                }
             }
         }
         fetch_and_wait_statements <- c(fetch_and_wait_statements, sprintf("waitForCell(waitFor=%d, host='results-hub-service.default.svc.cluster.local')", cell_number - 1))
