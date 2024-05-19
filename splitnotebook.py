@@ -87,5 +87,6 @@ def process_notebook(notebook_path, output_directory):
 
 
 # Example usage
-#notebook_path = 'path_to_notebook.ipynb'
-#output_directory = 'path_to_output_directory'
+notebook_path = './example/Rexample.ipynb'
+output_directory = 'execution'
+process_notebook(notebook_path, output_directory)

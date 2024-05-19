@@ -8,7 +8,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 #R packages
-from translateR2Py import translate_directory_r_to_py
 
 # J2K packages
 from codegen import gen_code_to_all_cells
@@ -69,9 +68,7 @@ def main(skip_dockerization, notebook_path, output_dir, dockerhub_username, dock
         # NOT SKIPPING DOCKERIZATION
         j2k_config = load_config('J2K_CONFIG.json')
         # STEP 1: Split and Run Static Analysis the notebook
-
         process_notebook(notebook_path, output_dir)
-        translate_directory_r_to_py(output_dir)
         build_conflict_map(output_dir, j2k_config['filesReadWrite'])
 
         # STEP 2: Run variable dependency analysis & file conflicts analysis
@@ -154,7 +151,7 @@ def main(skip_dockerization, notebook_path, output_dir, dockerhub_username, dock
 
 if __name__ == '__main__':
     skip_dockerization = True if len(sys.argv) > 1 and sys.argv[1] == "skip" else False
-    notebook_path = sys.argv[2] if len(sys.argv) > 2 else './example/Rexample.ipynb'
+    notebook_path = sys.argv[2] if len(sys.argv) > 2 else './example/timecomplexity.ipynb'
 
     # Parse the configuration file
     j2k_config = load_config('J2K_CONFIG.json')
